@@ -65,7 +65,7 @@ dependencies {
     implementation(libs.androidx.preferences)
 
     implementation("work.socialhub.kbsky:core:0.0.1-SNAPSHOT")
-    implementation("work.socialhub:khttpclient:0.0.2-SNAPSHOT")
+    implementation("work.socialhub:khttpclient:0.0.1-SNAPSHOT")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2")
     implementation("io.ktor:ktor-client-core:2.3.12")
 

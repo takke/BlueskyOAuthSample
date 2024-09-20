@@ -17,8 +17,6 @@ dependencyResolutionManagement {
         mavenLocal().mavenContent {
             // kbsky(local)
             includeGroup("work.socialhub.kbsky")
-            // khttpclient(local)
-            includeGroup("work.socialhub")
         }
 
         // khttpclient
