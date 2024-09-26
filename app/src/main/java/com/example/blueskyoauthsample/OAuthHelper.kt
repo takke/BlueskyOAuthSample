@@ -14,7 +14,7 @@ object OAuthHelper {
         endpoint: String,
         method: String,
         dpopNonce: String,
-        // 公開鍵の x 値、y 値
+        // ES256 公開鍵の x 値、y 値
         publicKeyWAffineX: ByteArray,
         publicKeyWAffineY: ByteArray,
         // 秘密鍵でメッセージを署名する lambda

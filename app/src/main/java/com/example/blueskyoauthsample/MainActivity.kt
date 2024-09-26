@@ -15,10 +15,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import work.socialhub.kbsky.internal.share._InternalUtility
 import work.socialhub.kbsky.util.MediaType
@@ -32,7 +28,6 @@ import java.security.interfaces.ECPublicKey
 import java.security.spec.ECGenParameterSpec
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
-import kotlin.random.Random
 
 
 class MainActivity : ComponentActivity() {
