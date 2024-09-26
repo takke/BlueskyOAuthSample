@@ -60,10 +60,10 @@ class MainActivity : ComponentActivity() {
     private val resultTextFlow: MutableStateFlow<String> by lazy { MutableStateFlow("") }
 
     // https://github.com/bluesky-social/atproto/issues/2814 の認証サーバのバグによりまだ動かない
-//    private val clientId = "https://zonepane.com/oauth/bluesky/zonepane/client-metadata.json"
-//    private val redirectUri = "http://zonepane.com/oauth/bluesky/zonepane/callback"
-    private val clientId = "http://localhost/zonepane"
-    private val redirectUri = "http://127.0.0.1/zonepane"
+    private val clientId = "https://zonepane.com/oauth/bluesky/zonepane/client-metadata.json"
+    private val redirectUri = "http://zonepane.com/oauth/bluesky/zonepane/callback"
+//    private val clientId = "http://localhost/zonepane"
+//    private val redirectUri = "http://127.0.0.1/zonepane"
 
     private val scopes = listOf("atproto", "transition:generic", "transition:chat.bsky")
 
@@ -91,10 +91,6 @@ class MainActivity : ComponentActivity() {
 //            delay(1000)
 //            startAuth("takke.jp")
 //        }
-
-//        // サーバを起動
-//        val serviceIntent = Intent(this, MyLocalHttpServerService::class.java)
-//        startService(serviceIntent)
     }
 
     private fun startAuth(screenName: String) {

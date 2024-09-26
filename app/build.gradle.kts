@@ -69,9 +69,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2")
     implementation("io.ktor:ktor-client-core:2.3.12")
 
-    // redirect_uri 用に localhost のサーバを建てる場合に必要
-//    implementation("io.ktor:ktor-server-netty:1.6.6")
-
     // jwt
 //    implementation("io.ktor:ktor-server-auth:2.1.2")
 //    implementation("io.ktor:ktor-server-auth-jwt:2.3.11")
