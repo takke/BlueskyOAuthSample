@@ -16,4 +16,22 @@ class MyPreferences(context: Context) {
                 putString("dpopNonce", value)
             }
         }
+
+    // public key
+    var publicKeyBase64: String
+        get() = pref.getString("publicKey", "") ?: ""
+        set(value) {
+            pref.edit {
+                putString("publicKey", value)
+            }
+        }
+
+    // private key
+    var privateKeyBase64: String
+        get() = pref.getString("privateKey", "") ?: ""
+        set(value) {
+            pref.edit {
+                putString("privateKey", value)
+            }
+        }
 }

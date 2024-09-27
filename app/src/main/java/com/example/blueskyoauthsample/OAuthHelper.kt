@@ -71,12 +71,13 @@ object OAuthHelper {
         return jwt
     }
 
+    @OptIn(ExperimentalEncodingApi::class)
     private fun generateRandomValue(): String {
         // ランダム値を生成
         val randomValueBytes = ByteArray(32)
         Random.nextBytes(randomValueBytes)
 
         // BASE64エンコード
-        return randomValueBytes.joinToString("") { "%02x".format(it) }
+        return Base64.encode(randomValueBytes)
     }
 }

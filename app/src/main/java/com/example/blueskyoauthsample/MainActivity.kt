@@ -19,13 +19,9 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import work.socialhub.kbsky.internal.share._InternalUtility
 import work.socialhub.kbsky.util.MediaType
 import work.socialhub.khttpclient.HttpRequest
-import java.security.KeyPairGenerator
 import java.security.MessageDigest
 import java.security.Security
 import java.security.Signature
-import java.security.interfaces.ECPrivateKey
-import java.security.interfaces.ECPublicKey
-import java.security.spec.ECGenParameterSpec
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -36,29 +32,33 @@ class MainActivity : ComponentActivity() {
 
     // テスト用
     // TODO 認証のたびに変更すること
-    private val codeVerifier = "110b58dd6ea4d9c4debf94d035c5975c5c915ea04f7a9d04c665e78b2f7c0007"
+    private val codeVerifier = "a10b58dd6ea4d9c4debf94d035c5975c5c915ea04ftest"
     private val codeChallenge = generateSha256Hash(codeVerifier)
     private val state = "8760520e052dcca8a0b82845a5a6d945b180f8b570e92acfbc9a5a1446a50007"
 
     private val codeTextFlow: MutableStateFlow<String> by lazy {
         MutableStateFlow(
             // 下記をブラウザで認証・認可後に書き換えること
-            "cod-fc099f815d64093f103cb36cf37ee2ab45504e9db992fa15e6fcbfbc71716a93"
+            "cod-ca24011dd07de91b8aed72dc5159447f5679e9d07eb7b5e2fd475becd3ba29a9"
         )
     }
 
-    private val screenNameText: MutableStateFlow<String> by lazy { MutableStateFlow("takke.jp") }
+    // Key Pair
+    private val publicKeyTextFlow: MutableStateFlow<String> by lazy { MutableStateFlow(myPref.publicKeyBase64) }
+    private val privateKeyTextFlow: MutableStateFlow<String> by lazy { MutableStateFlow(myPref.privateKeyBase64) }
 
     // 最新のdpop-nonceを保持する
     private val dpopNonceTextFlow: MutableStateFlow<String> by lazy { MutableStateFlow(myPref.dpopNonce) }
 
+    private val screenNameText: MutableStateFlow<String> by lazy { MutableStateFlow("takke.jp") }
+
     private val resultTextFlow: MutableStateFlow<String> by lazy { MutableStateFlow("") }
 
     // https://github.com/bluesky-social/atproto/issues/2814 の認証サーバのバグによりまだ動かない
-    private val clientId = "https://zonepane.com/oauth/bluesky/zonepane/client-metadata.json"
-    private val redirectUri = "http://zonepane.com/oauth/bluesky/zonepane/callback"
-//    private val clientId = "http://localhost/zonepane"
-//    private val redirectUri = "http://127.0.0.1/zonepane"
+//    private val clientId = "https://zonepane.com/oauth/bluesky/zonepane/client-metadata.json"
+//    private val redirectUri = "http://zonepane.com/oauth/bluesky/zonepane/callback"
+    private val clientId = "http://localhost/zonepane"
+    private val redirectUri = "http://127.0.0.1/zonepane"
 
     private val scopes = listOf("atproto", "transition:generic", "transition:chat.bsky")
 
@@ -69,10 +69,24 @@ class MainActivity : ComponentActivity() {
             BlueskyOAuthSampleTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     TheSampleScreen(
+                        publicKeyTextFlow = publicKeyTextFlow,
+                        privateKeyTextFlow = privateKeyTextFlow,
                         screenNameTextFlow = screenNameText,
                         codeTextFlow = codeTextFlow,
                         dpopNonceTextFlow = dpopNonceTextFlow,
                         resultTextFlow = resultTextFlow,
+                        onGenerateKeyPair = {
+                            //--------------------------------------------------
+                            // ES256 の鍵ペア生成
+                            //--------------------------------------------------
+                            val keyPair = Es256KeyHelper.generateKeyPair()
+                            publicKeyTextFlow.value = Es256KeyHelper.serializeKeyToString(keyPair.first)
+                            privateKeyTextFlow.value = Es256KeyHelper.serializeKeyToString(keyPair.second)
+
+                            // save
+                            myPref.publicKeyBase64 = publicKeyTextFlow.value
+                            myPref.privateKeyBase64 = privateKeyTextFlow.value
+                        },
                         onStartAuth = { screenName -> startAuth(screenName) },
                         onStartGetToken = { code -> startGetToken(code) },
                         modifier = Modifier.padding(innerPadding)
@@ -296,7 +310,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @OptIn(ExperimentalEncodingApi::class)
     private suspend fun makeDpopHeader(endpoint: String, method: String): String {
 
         val dpopNonce = dpopNonceTextFlow.value
@@ -307,24 +320,6 @@ class MainActivity : ComponentActivity() {
 //        }
 
         appendResult("dpop-none=[$dpopNonce]")
-
-        //--------------------------------------------------
-        // ES256 の鍵ペア生成
-        //--------------------------------------------------
-        appendResult("ES256の鍵ペアを生成します")
-        // TODO この鍵ペアは永続化して保存すること
-        val keyPairGenerator = KeyPairGenerator.getInstance("EC")
-        keyPairGenerator.initialize(ECGenParameterSpec("secp256r1"))
-        val keyPair = keyPairGenerator.generateKeyPair()
-        val publicKey = keyPair.public as ECPublicKey
-        val privateKey = keyPair.private as ECPrivateKey
-
-        val publicKeyEncodedBytes: ByteArray = Base64.encodeToByteArray(publicKey.encoded)
-        val privateKeyEncodedBytes: ByteArray = Base64.encodeToByteArray(privateKey.encoded)
-        appendResult("----- ES256 Public Key -----")
-        appendResult(String(publicKeyEncodedBytes))
-        appendResult("----- ES256 Private Key -----")
-        appendResult(String(privateKeyEncodedBytes))
 
         // "SHA256withPLAIN-ECDSA" を使えるようにする
         val provider = Security.getProvider(BouncyCastleProvider.PROVIDER_NAME)
@@ -338,6 +333,9 @@ class MainActivity : ComponentActivity() {
         } else {
             appendResult("BouncyCastleProvider はすでに登録されています")
         }
+
+        val publicKey = Es256KeyHelper.deserializePublicKeyFromString(publicKeyTextFlow.value)
+        val privateKey = Es256KeyHelper.deserializePrivateKeyFromString(privateKeyTextFlow.value)
 
         val jwt = OAuthHelper.makeDpopHeader(
             clientId = clientId,
@@ -375,6 +373,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalEncodingApi::class)
     private fun generateSha256Hash(base64Value: String): String {
         val value = base64Value.toByteArray()
 
@@ -383,7 +382,7 @@ class MainActivity : ComponentActivity() {
         val hashBytes = digest.digest(value)
 
         // BASE64エンコード
-        return hashBytes.joinToString("") { "%02x".format(it) }
+        return Base64.encode(hashBytes)
     }
 
 }
