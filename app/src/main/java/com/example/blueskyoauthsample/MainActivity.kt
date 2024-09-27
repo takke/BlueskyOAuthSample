@@ -95,11 +95,26 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // ここで自動実行する
-//        lifecycleScope.launch {
+        lifecycleScope.launch {
+            //--------------------------------------------------
+            // "SHA256withPLAIN-ECDSA" を使えるようにする
+            //--------------------------------------------------
+            val provider = Security.getProvider(BouncyCastleProvider.PROVIDER_NAME)
+            if (provider.javaClass != BouncyCastleProvider::class.java) {
+                // Android には BouncyCastle の短縮版が既に含まれていてそれには "SHA256withPLAIN-ECDSA" が含まれていないので
+                // BouncyCastleProvider を置き換える
+                // https://stackoverflow.com/questions/55123228/java-security-nosuchalgorithmexception-no-such-algorithm-ecdsa-for-provider-bc
+                appendResult("BouncyCastleProvider を置き換えます")
+                Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME)
+                Security.insertProviderAt(BouncyCastleProvider(), 1)
+            } else {
+                appendResult("BouncyCastleProvider はすでに登録されています")
+            }
+
+            // ここで自動実行する
 //            delay(1000)
 //            startAuth("takke.jp")
-//        }
+        }
     }
 
     private fun startAuth(screenName: String) {
@@ -285,12 +300,38 @@ class MainActivity : ComponentActivity() {
 
             val tokenUrl = "https://bsky.social/oauth/token"
 
-            val dpopHeader = makeDpopHeader(tokenUrl, "POST")
+            // DPoP Header 生成
+            val dpopNonce = dpopNonceTextFlow.value
+            // ※dpop-nonce なしの場合はリクエストに失敗し、新たな dpop-nonce を収集する
+//            appendResult("dpop-none=[$dpopNonce]")
 
-            if (dpopHeader.isEmpty()) {
-                appendResult("dpopHeaderが空です")
-                return@withContext
-            }
+            val publicKey = Es256KeyHelper.deserializePublicKeyFromString(publicKeyTextFlow.value)
+            val privateKey = Es256KeyHelper.deserializePrivateKeyFromString(privateKeyTextFlow.value)
+
+            val dpopHeader = OAuthHelper.makeDpopHeader(
+                clientId = clientId,
+                endpoint = tokenUrl,
+                method = "POST",
+                dpopNonce = dpopNonce,
+                publicKeyWAffineX = publicKey.w.affineX.toByteArray(),
+                publicKeyWAffineY = publicKey.w.affineY.toByteArray(),
+                sign = { jwtMessage ->
+                    // jwtMessage を署名し、バイト列を返す
+
+                    // "SHA256withECDSAinP1363Format" は Android で使用不可
+//                    val jwtSignature = Signature.getInstance("SHA256withECDSAinP1363Format")
+
+                    val jwtSignature = Signature.getInstance("SHA256withPLAIN-ECDSA", "BC") // IEEE P1363
+
+                    // jwtMessage の署名
+                    jwtSignature.initSign(privateKey)
+                    jwtSignature.update(jwtMessage.toByteArray())
+                    jwtSignature.sign()
+                }
+            )
+
+            appendResult("----- DPoP -----")
+            appendResult(dpopHeader)
 
             val r = HttpRequest()
                 .url(tokenUrl)
@@ -308,61 +349,6 @@ class MainActivity : ComponentActivity() {
             // dpop-nonce の収集と永続化
             collectAndSaveDpopNonce(r.headers)
         }
-    }
-
-    private suspend fun makeDpopHeader(endpoint: String, method: String): String {
-
-        val dpopNonce = dpopNonceTextFlow.value
-        // dpop-nonce なしの場合はリクエストに失敗し、新たな dpop-nonce を収集する
-//        if (dpopNonce.isEmpty()) {
-//            appendResult("dpop-nonceが見つかりません")
-//            return ""
-//        }
-
-        appendResult("dpop-none=[$dpopNonce]")
-
-        // "SHA256withPLAIN-ECDSA" を使えるようにする
-        val provider = Security.getProvider(BouncyCastleProvider.PROVIDER_NAME)
-        if (provider.javaClass != BouncyCastleProvider::class.java) {
-            // Android には BouncyCastle の短縮版が既に含まれていてそれには "SHA256withPLAIN-ECDSA" が含まれていないので
-            // BouncyCastleProvider を置き換える
-            // https://stackoverflow.com/questions/55123228/java-security-nosuchalgorithmexception-no-such-algorithm-ecdsa-for-provider-bc
-            appendResult("BouncyCastleProvider を置き換えます")
-            Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME)
-            Security.insertProviderAt(BouncyCastleProvider(), 1)
-        } else {
-            appendResult("BouncyCastleProvider はすでに登録されています")
-        }
-
-        val publicKey = Es256KeyHelper.deserializePublicKeyFromString(publicKeyTextFlow.value)
-        val privateKey = Es256KeyHelper.deserializePrivateKeyFromString(privateKeyTextFlow.value)
-
-        val jwt = OAuthHelper.makeDpopHeader(
-            clientId = clientId,
-            endpoint = endpoint,
-            method = method,
-            dpopNonce = dpopNonce,
-            publicKeyWAffineX = publicKey.w.affineX.toByteArray(),
-            publicKeyWAffineY = publicKey.w.affineY.toByteArray(),
-            sign = { jwtMessage ->
-                // jwtMessage を署名し、バイト列を返す
-
-                // "SHA256withECDSAinP1363Format" は Android で使用不可
-//              val jwtSignature = Signature.getInstance("SHA256withECDSAinP1363Format")
-
-                val jwtSignature = Signature.getInstance("SHA256withPLAIN-ECDSA", "BC") // IEEE P1363
-
-                // jwtMessage の署名
-                jwtSignature.initSign(privateKey)
-                jwtSignature.update(jwtMessage.toByteArray())
-                jwtSignature.sign()
-            }
-        )
-
-        appendResult("----- JWT -----")
-        appendResult(jwt)
-
-        return jwt
     }
 
     private suspend fun appendResult(text: String) {
