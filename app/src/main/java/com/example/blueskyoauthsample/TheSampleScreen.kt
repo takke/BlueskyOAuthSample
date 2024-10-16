@@ -34,13 +34,10 @@ fun TheSampleScreen(
     publicKeyTextFlow: MutableStateFlow<String>,
     privateKeyTextFlow: MutableStateFlow<String>,
     screenNameTextFlow: MutableStateFlow<String>,
-    codeTextFlow: MutableStateFlow<String>,
-    dpopNonceTextFlow: MutableStateFlow<String>,
     resultTextFlow: MutableStateFlow<String>,
     modifier: Modifier = Modifier,
     onGenerateKeyPair: () -> Unit = {},
     onStartAuth: (String) -> Unit = {},
-    onStartGetToken: (String) -> Unit = {},
 ) {
 
     Column {
@@ -99,26 +96,6 @@ fun TheSampleScreen(
             }
         }
 
-        // dpop-nonce
-        Text(
-            text = "dpop-nonce",
-            modifier = modifier
-                .padding(start = 4.dp, top = 4.dp)
-                .fillMaxWidth()
-        )
-        Text(
-            text = dpopNonceTextFlow.value,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            fontSize = 12.sp,
-            modifier = modifier
-                .padding(4.dp)
-                .fillMaxWidth()
-                .border(0.5.dp, Color.Gray)
-                .background(Color.LightGray)
-                .padding(4.dp)
-        )
-
         // ScreenName
         Row(
             modifier = modifier
@@ -145,35 +122,6 @@ fun TheSampleScreen(
                     .padding(4.dp)
             ) {
                 Text("Start")
-            }
-        }
-
-        // code from url parameter of redirect url of authorization
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-        ) {
-            // 入力エリア
-            val text by codeTextFlow.collectAsState()
-            TextField(
-                value = text,
-                onValueChange = {
-                    codeTextFlow.value = it
-                },
-                label = { Text("code from redirection") },
-                modifier = modifier
-                    .weight(1f)
-                    .padding(4.dp)
-            )
-
-            // ボタン
-            Button(
-                onClick = { onStartGetToken(text) },
-                modifier = modifier
-                    .width(120.dp)
-                    .padding(4.dp)
-            ) {
-                Text("Get Token")
             }
         }
 
@@ -212,8 +160,6 @@ fun GreetingPreview() {
                 Base64.encode("private key".repeat(10).toByteArray())
             ),
             screenNameTextFlow = MutableStateFlow("takke.jp"),
-            codeTextFlow = MutableStateFlow(""),
-            dpopNonceTextFlow = MutableStateFlow(""),
             resultTextFlow = MutableStateFlow("ここに実行結果が表示されます"),
         )
     }
