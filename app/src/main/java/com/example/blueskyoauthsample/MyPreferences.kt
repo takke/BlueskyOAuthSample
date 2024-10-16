@@ -17,6 +17,15 @@ class MyPreferences(context: Context) {
             }
         }
 
+    // codeVerifier
+    var codeVerifier: String
+        get() = pref.getString("codeVerifier", "") ?: ""
+        set(value) {
+            pref.edit {
+                putString("codeVerifier", value)
+            }
+        }
+
     // public key
     var publicKeyBase64: String
         get() = pref.getString("publicKey", "") ?: ""
