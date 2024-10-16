@@ -6,7 +6,7 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.random.Random
 
-object OAuthHelper {
+object MyOAuthHelper {
 
     @OptIn(ExperimentalEncodingApi::class)
     fun makeDpopHeader(
