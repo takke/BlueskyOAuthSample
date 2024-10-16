@@ -64,17 +64,11 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.preferences)
 
-    implementation("work.socialhub.kbsky:core:0.0.1-SNAPSHOT")
-    implementation("work.socialhub:khttpclient:0.0.1-SNAPSHOT")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2")
-    implementation("io.ktor:ktor-client-core:2.3.12")
+    implementation("work.socialhub.kbsky:core:0.1.0-SNAPSHOT")
+    implementation("work.socialhub.kbsky:auth-jvm:0.1.0-SNAPSHOT")
 
-    // jwt
-//    implementation("io.ktor:ktor-server-auth:2.1.2")
-//    implementation("io.ktor:ktor-server-auth-jwt:2.3.11")
-
-    // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
-    implementation("org.bouncycastle:bcprov-jdk15to18:1.78.1")
+//    implementation("dev.whyoleg.cryptography:cryptography-core:0.4.0")
+    implementation("dev.whyoleg.cryptography:cryptography-provider-jdk:0.4.0")
 
     testImplementation(libs.junit)
 

@@ -4,9 +4,6 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
-<!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />-->
-<!--    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />-->
-
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -28,13 +25,17 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
 
-<!--        <service-->
-<!--            android:name=".MyLocalHttpServerService"-->
-<!--            android:enabled="true"-->
-<!--            android:exported="false"-->
-<!--            android:foregroundServiceType="dataSync" />-->
+            <!-- 認可後の com.zonepane:/callback に応答する -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="com.zonepane" />
+            </intent-filter>
+        </activity>
 
     </application>
 
